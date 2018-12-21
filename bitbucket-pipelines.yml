@@ -7,7 +7,7 @@ options:
 
 pipelines:
   branches:
-   helm-demo-bb:
+   demo:
     - step:
         # set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as environment variables
         name: Push Build in ECR
@@ -41,4 +41,4 @@ pipelines:
               - helm ls --tiller-namespace $HELM_NAMESPACE
               - export RELEASE_NAME="appv1"
               - export DEPLOYS=$(helm ls --tiller-namespace $HELM_NAMESPACE | grep $RELEASE_NAME | wc -l)
-              - if [ ${DEPLOYS}  -eq 0 ]; then helm install --name=${RELEASE_NAME} . --set=ingress.enabled=True,ingress.hosts={helm-demo.auto.pink.cat} --tiller-namespace $HELM_NAMESPACE --namespace $HELM_NAMESPACE --set=image.tag=$BUILD_ID; else helm upgrade ${RELEASE_NAME} . --set=ingress.enabled=True,ingress.hosts={helm-demo.auto.pink.cat} --tiller-namespace $HELM_NAMESPACE --namespace $HELM_NAMESPACE --set=image.tag=$BUILD_ID; fi
+              - if [ ${DEPLOYS}  -eq 0 ]; then helm install --name=${RELEASE_NAME} . --set=ingress.enabled=True,ingress.hosts={demo.com} --tiller-namespace $HELM_NAMESPACE --namespace $HELM_NAMESPACE --set=image.tag=$BUILD_ID; else helm upgrade ${RELEASE_NAME} . --set=ingress.enabled=True,ingress.hosts={demo.com} --tiller-namespace $HELM_NAMESPACE --namespace $HELM_NAMESPACE --set=image.tag=$BUILD_ID; fi

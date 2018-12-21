@@ -1,0 +1,11 @@
+- Create the service in any of the namespaces using the pods that are already running. For service creation please refer to app_service.yaml.
+- Please create ingress service and pods by referring to the following link:
+https://kubernetes.github.io/ingress-nginx/deploy/
+  1) Please run mandatory.yaml first.
+  2) Then run service-l4.yaml
+  3) Then run patch-configmap-l4.yaml
+- Once the ingress service and pods are up and running, please check it using the following command:
+kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
+- If the nginx ingress service is up and running, then create a rule to redirect traffic using rule.yaml to the required namespace and pod.
+
+

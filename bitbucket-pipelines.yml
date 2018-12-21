@@ -1,0 +1,44 @@
+# This is a sample build configuration for Java (Maven).
+# Check our guides at https://confluence.atlassian.com/x/zd-5Mw for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+options:
+  docker: true
+
+pipelines:
+  branches:
+   helm-demo-bb:
+    - step:
+        # set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as environment variables
+        name: Push Build in ECR
+        deployment: test    # set to test, staging or production
+        # trigger: manual  # uncomment to have a manual step
+        image: atlassian/pipelines-awscli
+        script:
+          - eval $(aws ecr get-login --no-include-email --region ap-southeast-1)
+          - export BUILD_ID=$BITBUCKET_BRANCH_$BITBUCKET_COMMIT_$BITBUCKET_BUILD_NUMBER
+          - docker build -t ${AWS_REGISTRY_URL}:$BUILD_ID .
+          - docker push ${AWS_REGISTRY_URL}:$BUILD_ID	
+    - step:
+        # set KUBERNETES_USERNAME and KUBERNETES_PASSWORD as environment variables
+        # this assumes your Docker image is already pushed to DockerHub with a version of BITBUCKET_BUILD_NUMBER
+        # and is running on the Kubernetes cluster. Use the following command locally to run the image before setting the deployment:
+        # kubectl run <app-name> --image=<my.dockerhub.username>/<image-name>:latest
+        name: Deploy to Kubernetes
+        deployment: staging   # set to test, staging or production
+        # trigger: manual  # uncomment to have a manual step
+        ##image: atlassian/pipelines-kubectl
+        image: lwolf/helm-kubectl-docker:latest
+        script:
+          # Configure kubectl
+              - export BUILD_ID=$BITBUCKET_BRANCH_$BITBUCKET_COMMIT_$BITBUCKET_BUILD_NUMBER
+              - export IMAGE_NAME=${AWS_REGISTRY_URL}:$BUILD_ID
+              - kubectl config set-cluster $KUBE_CLUSTER --server=$KUBE_SERVER --insecure-skip-tls-verify=true
+              - kubectl config set-credentials $HELM_SA --token=$HELM_SECRET_TOKEN
+              - kubectl config set-context $HELM_NAMESPACE --cluster=$KUBE_CLUSTER --user=$HELM_SA
+              - kubectl config use-context $HELM_NAMESPACE
+              - cd deploy/helm/demoapp
+              - helm ls --tiller-namespace $HELM_NAMESPACE
+              - export RELEASE_NAME="appv1"
+              - export DEPLOYS=$(helm ls --tiller-namespace $HELM_NAMESPACE | grep $RELEASE_NAME | wc -l)
+              - if [ ${DEPLOYS}  -eq 0 ]; then helm install --name=${RELEASE_NAME} . --set=ingress.enabled=True,ingress.hosts={helm-demo.auto.pink.cat} --tiller-namespace $HELM_NAMESPACE --namespace $HELM_NAMESPACE --set=image.tag=$BUILD_ID; else helm upgrade ${RELEASE_NAME} . --set=ingress.enabled=True,ingress.hosts={helm-demo.auto.pink.cat} --tiller-namespace $HELM_NAMESPACE --namespace $HELM_NAMESPACE --set=image.tag=$BUILD_ID; fi

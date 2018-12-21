@@ -1,0 +1,10 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nginx-configuration
+  namespace: ingress-abhi
+  labels:
+    app.kubernetes.io/name: ingress-abhi
+    app.kubernetes.io/part-of: ingress-abhi
+data:
+  use-proxy-protocol: "true"

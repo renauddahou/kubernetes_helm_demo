@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: 486325501283.dkr.ecr.ap-southeast-1.amazonaws.com/ewallet-k8s-poc
+  repository: ecr.repo.url
   tag: latest
   pullPolicy: IfNotPresent
 
